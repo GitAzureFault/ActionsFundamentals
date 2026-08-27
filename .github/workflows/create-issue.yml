@@ -18,7 +18,7 @@ on:
 
 jobs:
   create:
-    uses: GitAzureFault/.github-workflows/.github/workflows/create-issue.yml@v1
+    uses: GitAzureFault/.github-workflows/.github/workflows/create-issue.yml@main
     permissions:
       contents: write
       issues: write
