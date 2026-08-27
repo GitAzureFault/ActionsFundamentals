@@ -17,40 +17,14 @@ on:
         default: ''
 
 jobs:
-  build:
-    runs-on: custom-runner
+  create:
+    uses: GitAzureFault/.github-workflows/.github/workflows/create-issue.yml@v1
     permissions:
       contents: write
       issues: write
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Create issue, assign to requester, open branch
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ISSUE_TITLE: ${{ inputs.title }}
-          ISSUE_BODY: ${{ inputs.body }}
-          ASSIGNEE: ${{ github.actor }}
-          BRANCH_INPUT: ${{ inputs.branch }}
-        run: |
-          set -euo pipefail
-
-          ISSUE_URL=$(gh issue create \
-            --title "$ISSUE_TITLE" \
-            --body "$ISSUE_BODY
-
-          ---
-          Requested by @${ASSIGNEE} via run [\`${GITHUB_RUN_ID}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})." \
-            --assignee "$ASSIGNEE")
-          ISSUE_NUM="${ISSUE_URL##*/}"
-
-          BRANCH="${BRANCH_INPUT:-bugfixes/issue-${ISSUE_NUM}}"
-
-          gh issue develop "$ISSUE_NUM" --name "$BRANCH" --base main
-
-          {
-            echo "### Issue created"
-            echo "- Issue: $ISSUE_URL"
-            echo "- Branch: \`$BRANCH\` (from \`main\`)"
-            echo "- Assigned to: @$ASSIGNEE"
-          } >> "$GITHUB_STEP_SUMMARY"
+    with:
+      runner: self-hosted
+      title: ${{ inputs.title }}
+      body: ${{ inputs.body }}
+      branch: ${{ inputs.branch }}
+      
