@@ -11,10 +11,10 @@ on:
         description: 'Body of the issue to create'
         required: true
         default: 'Created from a workflow_dispatch run'
-      base:
-        description: 'Branch to cut the fix branch from'
+      branch:
+        description: 'Branch to create (leave empty for bugfixes/issue-<number>)'
         required: false
-        default: 'main'
+        default: ''
 
 jobs:
   build:
@@ -31,7 +31,7 @@ jobs:
           ISSUE_TITLE: ${{ inputs.title }}
           ISSUE_BODY: ${{ inputs.body }}
           ASSIGNEE: ${{ github.actor }}
-          BASE: ${{ inputs.base }}
+          BRANCH_INPUT: ${{ inputs.branch }}
         run: |
           set -euo pipefail
 
@@ -40,22 +40,17 @@ jobs:
             --body "$ISSUE_BODY
 
           ---
-          Requested by @${ASSIGNEE} via \`${GITHUB_WORKFLOW}\` run [\`${GITHUB_RUN_ID}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})." \
+          Requested by @${ASSIGNEE} via run [\`${GITHUB_RUN_ID}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})." \
             --assignee "$ASSIGNEE")
           ISSUE_NUM="${ISSUE_URL##*/}"
 
-          SLUG=$(echo "$ISSUE_TITLE" \
-            | tr '[:upper:]' '[:lower:]' \
-            | tr -cs '[:alnum:]' '-' \
-            | cut -c1-40 \
-            | sed 's/-*$//')
-          BRANCH="issue/${ISSUE_NUM}-${SLUG}"
+          BRANCH="${BRANCH_INPUT:-bugfixes/issue-${ISSUE_NUM}}"
 
-          gh issue develop "$ISSUE_NUM" --name "$BRANCH" --base "$BASE"
+          gh issue develop "$ISSUE_NUM" --name "$BRANCH" --base main
 
           {
             echo "### Issue created"
             echo "- Issue: $ISSUE_URL"
-            echo "- Branch: \`$BRANCH\`"
+            echo "- Branch: \`$BRANCH\` (from \`main\`)"
             echo "- Assigned to: @$ASSIGNEE"
           } >> "$GITHUB_STEP_SUMMARY"
